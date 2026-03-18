@@ -117,7 +117,7 @@ export default function EvaluationForm({ evaluationId }: EvaluationFormProps) {
         data={sectionData}
         config={config}
       />
-      <ActionsBar evaluationId={data._id} onPrint={handlePrint} />
+      <ActionsBar evaluationId={data._id} status={data.status} onPrint={handlePrint} />
     </div>
   );
 }
