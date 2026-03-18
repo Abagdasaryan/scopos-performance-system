@@ -74,7 +74,6 @@ export default function MyTeamPage() {
     try {
       const evalId = await createEval({
         employeeId: empId as Id<"employees">,
-        reviewerId: managerId as Id<"employees">,
         roleType,
       });
       router.push(`/evaluations/${evalId}`);

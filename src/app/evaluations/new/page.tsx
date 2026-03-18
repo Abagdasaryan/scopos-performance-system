@@ -15,17 +15,15 @@ export default function NewEvaluationPage() {
   const router = useRouter();
 
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-  const [reviewerId, setReviewerId] = useState<string | null>(null);
 
   const selectedEmp = selectedEmployee
     ? employees?.find((e) => e._id === selectedEmployee)
     : null;
 
   const handleCreate = async (roleType: string) => {
-    if (selectedEmployee && reviewerId) {
+    if (selectedEmployee) {
       const id = await createEvalForEmployee({
         employeeId: selectedEmployee as Id<"employees">,
-        reviewerId: reviewerId as Id<"employees">,
         roleType,
       });
       router.push(`/evaluations/${id}`);
@@ -71,31 +69,6 @@ export default function NewEvaluationPage() {
         </div>
       </div>
 
-      {selectedEmployee && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="card-body">
-            <label
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.8px",
-                color: "var(--ink-muted)",
-                display: "block",
-                marginBottom: 8,
-              }}
-            >
-              Reviewer
-            </label>
-            <EmployeePicker
-              employees={(employees ?? []).filter((e) => e._id !== selectedEmployee)}
-              selected={reviewerId}
-              onSelect={setReviewerId}
-              placeholder="Select reviewer..."
-            />
-          </div>
-        </div>
-      )}
 
       <p style={{ color: "var(--ink-soft)", marginBottom: 24 }}>Select the role type for this evaluation:</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
