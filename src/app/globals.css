@@ -445,3 +445,94 @@ select.metric-input { cursor: pointer; appearance: auto; width: 180px; text-alig
   .rating-table td:first-child, .rating-table thead th:first-child { padding-left: 20px; }
   .score-row { padding: 12px 20px; }
 }
+
+/* ─── Navigation ───────────────────────────── */
+.top-nav {
+  display: flex; align-items: center; gap: 24px;
+  background: #1a2332; color: white;
+  padding: 0 24px; height: 56px;
+  font-size: 14px; font-weight: 500;
+}
+.top-nav a, .top-nav button { color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.2s; background: none; border: none; cursor: pointer; font: inherit; }
+.top-nav a:hover, .top-nav button:hover { color: white; }
+.nav-logo { height: 32px; width: auto; margin-right: 8px; border-radius: 4px; padding: 2px 6px; background: rgba(255,255,255,0.9); }
+.nav-spacer { flex: 1; }
+.nav-dropdown { position: relative; }
+.nav-dropdown-menu { position: absolute; top: 100%; right: 0; background: white; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px 0; z-index: 100; }
+.nav-dropdown-menu a { display: block; padding: 8px 16px; color: var(--ink) !important; font-size: 14px; }
+.nav-dropdown-menu a:hover { background: var(--accent-bg); }
+
+/* ─── Employee Picker ──────────────────────── */
+.employee-picker { position: relative; }
+.employee-picker-input { width: 100%; }
+.employee-picker-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); max-height: 240px; overflow-y: auto; z-index: 50; }
+.employee-picker-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border-light); font-size: 14px; }
+.employee-picker-item:hover { background: var(--accent-bg); }
+.employee-picker-item:last-child { border-bottom: none; }
+.employee-picker-item .emp-name { font-weight: 600; color: var(--ink); }
+.employee-picker-item .emp-detail { font-size: 12px; color: var(--ink-muted); }
+.employee-picker-selected { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--accent-bg); border-radius: var(--radius-sm); font-size: 14px; }
+.employee-picker-selected .clear-btn { background: none; border: none; cursor: pointer; color: var(--ink-muted); font-size: 16px; padding: 0 4px; }
+
+/* ─── Admin Tables ─────────────────────────── */
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table thead th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--ink-muted); padding: 12px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+.admin-table tbody tr { transition: background 0.15s; cursor: pointer; }
+.admin-table tbody tr:hover { background: var(--accent-bg); }
+.admin-table tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border-light); font-size: 14px; color: var(--ink); }
+.admin-table tbody tr:nth-child(even) { background: #fafbfc; }
+.admin-table tbody tr:nth-child(even):hover { background: var(--accent-bg); }
+
+.status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.status-badge.active { background: var(--success-bg); color: var(--success); }
+.status-badge.inactive { background: #f5f5f5; color: var(--ink-muted); }
+.status-badge.draft { background: var(--warn-bg); color: var(--warn); }
+.status-badge.closed { background: #f5f5f5; color: var(--ink-muted); }
+
+/* ─── Org Chart ────────────────────────────── */
+.org-tree { display: flex; flex-direction: column; align-items: center; padding: 24px; min-width: max-content; }
+.org-node { background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; min-width: 200px; text-align: center; position: relative; box-shadow: var(--shadow-sm); }
+.org-node:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+.org-node .org-name { font-weight: 600; font-size: 14px; color: var(--ink); }
+.org-node .org-title { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+.org-node .org-reports { font-size: 11px; color: var(--ink-muted); margin-top: 4px; }
+.dept-badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.dept-badge.design { background: #e8f4fd; color: #1a73e8; }
+.dept-badge.construction { background: #fff3e0; color: #e65100; }
+.dept-badge.operations { background: #e8f5e9; color: #2e7d32; }
+.dept-badge.default { background: #f5f5f5; color: var(--ink-muted); }
+.org-children { display: flex; gap: 16px; margin-top: 24px; position: relative; justify-content: center; }
+.org-children::before { content: ''; position: absolute; top: -12px; left: 50%; width: 1px; height: 12px; background: var(--border); }
+.org-connector { display: flex; flex-direction: column; align-items: center; position: relative; }
+.org-connector::before { content: ''; width: 1px; height: 12px; background: var(--border); }
+.org-expand-btn { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); background: white; border: 1px solid var(--border); border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink-muted); z-index: 2; }
+
+/* ─── Stat Cards ───────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); }
+.stat-card .stat-value { font-family: var(--font-fraunces), 'Fraunces', serif; font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-card .stat-label { font-size: 13px; color: var(--ink-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+/* ─── Report Cards (My Team) ──────────────── */
+.report-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.report-card { background: white; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); }
+.report-card .report-name { font-weight: 600; font-size: 16px; color: var(--ink); }
+.report-card .report-title { font-size: 13px; color: var(--ink-muted); margin-top: 2px; }
+.report-card .report-meta { display: flex; gap: 16px; margin-top: 12px; font-size: 12px; color: var(--ink-muted); }
+.report-card .report-actions { margin-top: 12px; }
+
+/* ─── Checkbox List (Cycle employee selection) */
+.checkbox-list { padding: 0 32px 16px; }
+.checkbox-group-header { display: flex; align-items: center; gap: 8px; padding: 10px 0; font-weight: 600; font-size: 14px; color: var(--ink); border-bottom: 1px solid var(--border-light); cursor: pointer; }
+.checkbox-item { display: flex; align-items: center; gap: 10px; padding: 8px 0 8px 24px; font-size: 14px; border-bottom: 1px solid var(--border-light); }
+.checkbox-item:last-child { border-bottom: none; }
+.checkbox-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+
+/* ─── Zoom Controls ────────────────────────── */
+.zoom-controls { display: flex; gap: 4px; margin-bottom: 12px; }
+.zoom-controls button { padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; cursor: pointer; font-size: 14px; color: var(--ink); }
+.zoom-controls button:hover { background: var(--accent-bg); }
+
+@media print {
+  .top-nav { display: none; }
+}

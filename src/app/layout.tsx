@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/providers/ConvexProvider";
+import Navigation from "@/components/layout/Navigation";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -28,7 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${fraunces.variable}`}>
       <body>
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <ConvexClientProvider>
+          <Navigation />
+          {children}
+        </ConvexClientProvider>
       </body>
     </html>
   );

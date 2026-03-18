@@ -70,3 +70,36 @@ export interface DeficiencyRow {
 }
 
 export type EvaluationStatus = "draft" | "submitted" | "reviewed" | "finalized";
+
+export type AdminRole = "super_admin" | "hr_admin" | "manager" | "employee";
+
+export interface Employee {
+  _id: string;
+  name: string;
+  email: string;
+  title: string;
+  department?: string;
+  roleType?: string;
+  managerId?: string;
+  adminRole: AdminRole;
+  isActive: boolean;
+  hireDate?: string;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ReviewCycle {
+  _id: string;
+  name: string;
+  period: string;
+  startDate: string;
+  dueDate: string;
+  status: "draft" | "active" | "closed";
+  selectedEmployeeIds: string[];
+  createdBy: string;
+  metadata?: Record<string, unknown>;
+  createdAt: number;
+  updatedAt: number;
+}

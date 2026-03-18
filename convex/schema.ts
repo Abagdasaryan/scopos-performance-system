@@ -36,6 +36,9 @@ export default defineSchema({
     ),
     createdBy: v.optional(v.string()),
     reviewedBy: v.optional(v.string()),
+    employeeId: v.optional(v.id("employees")),
+    reviewerId: v.optional(v.id("employees")),
+    cycleId: v.optional(v.id("reviewCycles")),
     createdAt: v.float64(),
     updatedAt: v.float64(),
   })
@@ -45,5 +48,44 @@ export default defineSchema({
     .index("by_reviewer", ["reviewer"])
     .index("by_date", ["reviewDate"])
     .index("by_role_status", ["roleType", "status"])
+    .index("by_created", ["createdAt"])
+    .index("by_employee_id", ["employeeId"])
+    .index("by_reviewer_id", ["reviewerId"])
+    .index("by_cycle", ["cycleId"]),
+
+  employees: defineTable({
+    name: v.string(),
+    email: v.string(),
+    title: v.string(),
+    department: v.optional(v.string()),
+    roleType: v.optional(v.string()),
+    managerId: v.optional(v.id("employees")),
+    adminRole: v.string(),
+    isActive: v.boolean(),
+    hireDate: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    metadata: v.optional(v.any()),
+    createdAt: v.float64(),
+    updatedAt: v.float64(),
+  })
+    .index("by_email", ["email"])
+    .index("by_manager", ["managerId"])
+    .index("by_department", ["department"])
+    .index("by_role", ["roleType"])
+    .index("by_active", ["isActive"]),
+
+  reviewCycles: defineTable({
+    name: v.string(),
+    period: v.string(),
+    startDate: v.string(),
+    dueDate: v.string(),
+    status: v.string(),
+    selectedEmployeeIds: v.array(v.id("employees")),
+    createdBy: v.id("employees"),
+    metadata: v.optional(v.any()),
+    createdAt: v.float64(),
+    updatedAt: v.float64(),
+  })
+    .index("by_status", ["status"])
     .index("by_created", ["createdAt"]),
 });

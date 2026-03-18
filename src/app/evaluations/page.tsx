@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { ROLE_CONFIGS, getRoleConfig } from "@/lib/roleConfig";
+import EmployeePicker from "@/components/ui/EmployeePicker";
 import {
   computeWeightedSkillScore,
   computeAverageValueScore,
@@ -20,6 +21,9 @@ export default function EvaluationsPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [search, setSearch] = useState("");
+  const [employeeFilter, setEmployeeFilter] = useState<string | null>(null);
+
+  const employees = useQuery(api.employees.getAllEmployees, {});
 
   const queryArgs: Record<string, string> = {};
   if (roleFilter) queryArgs.roleType = roleFilter;
@@ -27,17 +31,35 @@ export default function EvaluationsPage() {
 
   const evaluations = useQuery(api.evaluations.listEvaluations, queryArgs);
 
+  // Find selected employee name for filtering
+  const selectedEmpName = employeeFilter
+    ? employees?.find((e) => e._id === employeeFilter)?.name
+    : null;
+
   // Client-side search filter on employee name
   const filtered = useMemo(() => {
     if (!evaluations) return [];
-    if (!search.trim()) return evaluations;
-    const q = search.toLowerCase();
-    return evaluations.filter(
-      (e) =>
-        e.empName?.toLowerCase().includes(q) ||
-        e.reviewer?.toLowerCase().includes(q)
-    );
-  }, [evaluations, search]);
+    let result = evaluations;
+
+    // Employee filter
+    if (employeeFilter && selectedEmpName) {
+      result = result.filter(
+        (e) =>
+          e.employeeId === employeeFilter ||
+          e.empName?.toLowerCase() === selectedEmpName.toLowerCase()
+      );
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (e) =>
+          e.empName?.toLowerCase().includes(q) ||
+          e.reviewer?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [evaluations, search, employeeFilter, selectedEmpName]);
 
   // Summary stats
   const stats = useMemo(() => {
@@ -178,6 +200,15 @@ export default function EvaluationsPage() {
               <option value="reviewed">Reviewed</option>
               <option value="finalized">Finalized</option>
             </select>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}>Employee</label>
+            <EmployeePicker
+              employees={employees ?? []}
+              selected={employeeFilter}
+              onSelect={setEmployeeFilter}
+              placeholder="Filter by employee..."
+            />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
             <label style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}>Search</label>

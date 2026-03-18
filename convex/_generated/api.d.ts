@@ -9,7 +9,9 @@
  */
 
 import type * as calculations from "../calculations.js";
+import type * as employees from "../employees.js";
 import type * as evaluations from "../evaluations.js";
+import type * as reviewCycles from "../reviewCycles.js";
 
 import type {
   ApiFromModules,
@@ -19,7 +21,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   calculations: typeof calculations;
+  employees: typeof employees;
   evaluations: typeof evaluations;
+  reviewCycles: typeof reviewCycles;
 }>;
 
 /**

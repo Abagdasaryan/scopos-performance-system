@@ -149,6 +149,41 @@ export const getEvaluation = query({
   },
 });
 
+export const createEvaluationForEmployee = mutation({
+  args: {
+    employeeId: v.id("employees"),
+    reviewerId: v.id("employees"),
+    roleType: v.string(),
+    cycleId: v.optional(v.id("reviewCycles")),
+  },
+  handler: async (ctx, { employeeId, reviewerId, roleType, cycleId }) => {
+    const emp = await ctx.db.get(employeeId);
+    if (!emp) throw new Error("Employee not found");
+    const reviewer = await ctx.db.get(reviewerId);
+    if (!reviewer) throw new Error("Reviewer not found");
+
+    const now = Date.now();
+    return await ctx.db.insert("evaluations", {
+      roleType,
+      empName: emp.name,
+      empPosition: emp.title,
+      reviewer: reviewer.name,
+      reviewDate: "",
+      reviewPeriod: "",
+      empProject: "",
+      skillRatings: {},
+      valueRatings: {},
+      operationalMetrics: {},
+      status: "draft",
+      employeeId,
+      reviewerId,
+      cycleId,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
 export const listEvaluations = query({
   args: {
     roleType: v.optional(v.string()),
@@ -207,5 +242,35 @@ export const listEvaluations = query({
     filtered.sort((a, b) => b.createdAt - a.createdAt);
 
     return filtered;
+  },
+});
+
+export const getEvaluationsForEmployee = query({
+  args: { employeeId: v.id("employees") },
+  handler: async (ctx, { employeeId }) => {
+    return await ctx.db
+      .query("evaluations")
+      .withIndex("by_employee_id", (q) => q.eq("employeeId", employeeId))
+      .collect();
+  },
+});
+
+export const getEvaluationsForReviewer = query({
+  args: { reviewerId: v.id("employees") },
+  handler: async (ctx, { reviewerId }) => {
+    return await ctx.db
+      .query("evaluations")
+      .withIndex("by_reviewer_id", (q) => q.eq("reviewerId", reviewerId))
+      .collect();
+  },
+});
+
+export const getEvaluationsForCycle = query({
+  args: { cycleId: v.id("reviewCycles") },
+  handler: async (ctx, { cycleId }) => {
+    return await ctx.db
+      .query("evaluations")
+      .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
+      .collect();
   },
 });

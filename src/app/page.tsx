@@ -25,12 +25,18 @@ export default function HomePage() {
             and generates automated insights for promotion readiness, authority gates, and risk flags.
           </p>
 
-          <div style={{ display: "flex", gap: 12 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link href="/evaluations/new" className="btn btn-primary">
               New Evaluation
             </Link>
             <Link href="/evaluations" className="btn btn-secondary">
               View All Evaluations
+            </Link>
+            <Link href="/my-team" className="btn btn-secondary">
+              My Team
+            </Link>
+            <Link href="/admin" className="btn btn-secondary">
+              Admin
             </Link>
           </div>
         </div>
