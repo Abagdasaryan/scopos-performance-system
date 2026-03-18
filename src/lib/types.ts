@@ -86,6 +86,8 @@ export interface Employee {
   hireDate?: string;
   tags?: string[];
   metadata?: Record<string, unknown>;
+  clerkUserId?: string;
+  inviteStatus?: string;
   createdAt: number;
   updatedAt: number;
 }

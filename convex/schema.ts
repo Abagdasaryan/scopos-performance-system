@@ -65,6 +65,8 @@ export default defineSchema({
     hireDate: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     metadata: v.optional(v.any()),
+    clerkUserId: v.optional(v.string()),
+    inviteStatus: v.optional(v.string()),
     createdAt: v.float64(),
     updatedAt: v.float64(),
   })
@@ -72,7 +74,8 @@ export default defineSchema({
     .index("by_manager", ["managerId"])
     .index("by_department", ["department"])
     .index("by_role", ["roleType"])
-    .index("by_active", ["isActive"]),
+    .index("by_active", ["isActive"])
+    .index("by_clerk_user", ["clerkUserId"]),
 
   reviewCycles: defineTable({
     name: v.string(),
