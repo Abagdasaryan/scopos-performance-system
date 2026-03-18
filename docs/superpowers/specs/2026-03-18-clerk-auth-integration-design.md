@@ -80,7 +80,7 @@ Add Clerk authentication to SCOPOS performance system. Clerk handles identity an
 3. Backend calls Clerk `invitations.createInvitation({ emailAddress })` API
 4. Employee record `inviteStatus` set to `"pending"`
 5. User receives email, clicks link, completes Clerk signup at `/sign-in`
-6. On first authenticated Convex request, `getAuthenticatedEmployee` matches by email, writes `clerkUserId`, sets `inviteStatus: "accepted"`
+6. On first authenticated Convex request, `getAuthenticatedEmployee` matches by email and returns `needs_linking` — client calls `linkClerkUser` mutation to write `clerkUserId` and set `inviteStatus: "accepted"`
 
 ### Admin Portal Changes
 - Employee list shows invite status badge (not invited / pending / accepted)
