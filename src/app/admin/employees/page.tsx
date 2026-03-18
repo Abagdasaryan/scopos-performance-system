@@ -220,6 +220,7 @@ export default function EmployeeListPage() {
                   <th>Role</th>
                   <th>Manager</th>
                   <th>Status</th>
+                  <th>Invite</th>
                 </tr>
               </thead>
               <tbody>
@@ -244,6 +245,23 @@ export default function EmployeeListPage() {
                         className={`status-badge ${emp.isActive ? "active" : "inactive"}`}
                       >
                         {emp.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`status-badge ${
+                          emp.inviteStatus === "accepted"
+                            ? "active"
+                            : emp.inviteStatus === "pending"
+                              ? "draft"
+                              : "inactive"
+                        }`}
+                      >
+                        {emp.inviteStatus === "accepted"
+                          ? "Linked"
+                          : emp.inviteStatus === "pending"
+                            ? "Pending"
+                            : "Not Invited"}
                       </span>
                     </td>
                   </tr>

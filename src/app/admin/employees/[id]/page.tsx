@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter, useParams } from "next/navigation";
 import { ROLE_CONFIGS } from "@/lib/roleConfig";
@@ -19,6 +19,8 @@ export default function EditEmployeePage() {
   const allEmployees = useQuery(api.employees.getAllEmployees, {});
   const updateEmployee = useMutation(api.employees.updateEmployee);
   const deactivateEmployee = useMutation(api.employees.deactivateEmployee);
+  const sendInvite = useAction(api.invites.sendInvite);
+  const [inviting, setInviting] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -123,6 +125,14 @@ export default function EditEmployeePage() {
         >
           {employee.isActive ? "Active" : "Inactive"}
         </span>
+        {employee.inviteStatus && employee.inviteStatus !== "none" && (
+          <span
+            className={`status-badge ${employee.inviteStatus === "accepted" ? "active" : "draft"}`}
+            style={{ marginLeft: 8 }}
+          >
+            {employee.inviteStatus === "accepted" ? "Account Linked" : "Invite Pending"}
+          </span>
+        )}
       </div>
 
       {error && (
@@ -219,6 +229,31 @@ export default function EditEmployeePage() {
         </div>
 
         <div className="actions-bar">
+          {employee.email && employee.inviteStatus !== "accepted" && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ marginRight: "auto" }}
+              disabled={inviting}
+              onClick={async () => {
+                setInviting(true);
+                try {
+                  await sendInvite({ employeeId: id as Id<"employees"> });
+                } catch (err: unknown) {
+                  const message = err instanceof Error ? err.message : "Failed to send invite.";
+                  setError(message);
+                } finally {
+                  setInviting(false);
+                }
+              }}
+            >
+              {inviting
+                ? "Sending..."
+                : employee.inviteStatus === "pending"
+                  ? "Resend Invite"
+                  : "Send Invite"}
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-secondary"
