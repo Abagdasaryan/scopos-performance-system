@@ -18,7 +18,7 @@ export default function EditEmployeePage() {
   });
   const allEmployees = useQuery(api.employees.getAllEmployees, {});
   const updateEmployee = useMutation(api.employees.updateEmployee);
-  const deactivateEmployee = useMutation(api.employees.deactivateEmployee);
+  const deactivateWithClerk = useAction(api.invites.deactivateWithClerk);
   const sendInvite = useAction(api.invites.sendInvite);
   const [inviting, setInviting] = useState(false);
 
@@ -77,7 +77,7 @@ export default function EditEmployeePage() {
     setError("");
     try {
       if (employee?.isActive) {
-        await deactivateEmployee({ id: id as Id<"employees"> });
+        await deactivateWithClerk({ employeeId: id as Id<"employees"> });
       } else {
         await updateEmployee({ id: id as Id<"employees">, isActive: true });
       }
