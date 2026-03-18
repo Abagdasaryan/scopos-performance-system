@@ -5,7 +5,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { ROLE_CONFIGS, getRoleConfig } from "@/lib/roleConfig";
-import EmployeePicker from "@/components/ui/EmployeePicker";
 import {
   computeWeightedSkillScore,
   computeAverageValueScore,
@@ -17,19 +16,23 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 export default function MyTeamPage() {
   const router = useRouter();
-  const allEmployees = useQuery(api.employees.getAllEmployees, {});
-  const [managerId, setManagerId] = useState<string | null>(null);
+  const authStatus = useQuery(api.auth.getAuthStatus);
+  const managerId =
+    authStatus?.status === "authenticated"
+      ? authStatus.employee._id
+      : undefined;
+
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
   const [roleSelectFor, setRoleSelectFor] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState("");
 
   const reports = useQuery(
     api.employees.getDirectReports,
-    managerId ? { managerId: managerId as Id<"employees"> } : "skip"
+    managerId ? { managerId } : "skip"
   );
   const evals = useQuery(
     api.evaluations.getEvaluationsForReviewer,
-    managerId ? { reviewerId: managerId as Id<"employees"> } : "skip"
+    managerId ? { reviewerId: managerId } : "skip"
   );
 
   const createEval = useMutation(api.evaluations.createEvaluationForEmployee);
@@ -89,6 +92,14 @@ export default function MyTeamPage() {
       (e) => e.status === "submitted" || e.status === "finalized"
     ) ?? [];
 
+  if (authStatus === undefined) {
+    return (
+      <div className="container">
+        <p style={{ color: "var(--ink-muted)" }}>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
       <h1
@@ -100,31 +111,6 @@ export default function MyTeamPage() {
       >
         My Team
       </h1>
-
-      {/* Acting As */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div className="card-body">
-          <label
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.8px",
-              color: "var(--ink-muted)",
-              display: "block",
-              marginBottom: 8,
-            }}
-          >
-            Acting As (Manager)
-          </label>
-          <EmployeePicker
-            employees={allEmployees ?? []}
-            selected={managerId}
-            onSelect={setManagerId}
-            placeholder="Select yourself as manager..."
-          />
-        </div>
-      </div>
 
       {managerId && (
         <>
