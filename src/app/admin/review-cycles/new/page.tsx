@@ -5,7 +5,6 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { ROLE_CONFIGS } from "@/lib/roleConfig";
-import EmployeePicker from "@/components/ui/EmployeePicker";
 
 export default function NewReviewCyclePage() {
   const router = useRouter();
@@ -17,7 +16,6 @@ export default function NewReviewCyclePage() {
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [createdBy, setCreatedBy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -76,10 +74,6 @@ export default function NewReviewCyclePage() {
       setError("Select at least one employee.");
       return;
     }
-    if (!createdBy) {
-      setError("Select who is creating this cycle (Acting as).");
-      return;
-    }
     setSaving(true);
     try {
       const newId = await createCycle({
@@ -88,7 +82,6 @@ export default function NewReviewCyclePage() {
         startDate: startDate || "",
         dueDate: dueDate || "",
         selectedEmployeeIds: Array.from(selectedIds) as any,
-        createdBy: createdBy as any,
       });
       router.push(`/admin/review-cycles/${newId}`);
     } catch (err: unknown) {
@@ -119,31 +112,6 @@ export default function NewReviewCyclePage() {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Acting As */}
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="card-body">
-            <label
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.8px",
-                color: "var(--ink-muted)",
-                display: "block",
-                marginBottom: 8,
-              }}
-            >
-              Acting As (Creator)
-            </label>
-            <EmployeePicker
-              employees={employees ?? []}
-              selected={createdBy}
-              onSelect={setCreatedBy}
-              placeholder="Select who is creating this cycle..."
-            />
-          </div>
-        </div>
-
         {/* Cycle Details */}
         <div className="card">
           <div

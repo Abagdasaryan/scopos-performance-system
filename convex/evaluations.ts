@@ -1,11 +1,13 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireEmployee, requireRole } from "./auth";
 
 // ── Mutations ──────────────────────────────────────────────────────────────────
 
 export const createEvaluation = mutation({
   args: { roleType: v.string() },
   handler: async (ctx, { roleType }) => {
+    await requireEmployee(ctx);
     const now = Date.now();
     return await ctx.db.insert("evaluations", {
       roleType,
@@ -39,6 +41,7 @@ export const updateEmployeeInfo = mutation({
     reviewedBy: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...fields }) => {
+    await requireEmployee(ctx);
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) {
@@ -56,6 +59,7 @@ export const updateSkillRating = mutation({
     rating: v.union(v.float64(), v.null()),
   },
   handler: async (ctx, { id, skillId, rating }) => {
+    await requireEmployee(ctx);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Evaluation not found");
     const skillRatings = { ...doc.skillRatings, [skillId]: rating };
@@ -70,6 +74,7 @@ export const updateValueRating = mutation({
     rating: v.union(v.float64(), v.null()),
   },
   handler: async (ctx, { id, valueId, rating }) => {
+    await requireEmployee(ctx);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Evaluation not found");
     const valueRatings = { ...doc.valueRatings, [valueId]: rating };
@@ -84,6 +89,7 @@ export const updateMetric = mutation({
     value: v.union(v.float64(), v.string(), v.null()),
   },
   handler: async (ctx, { id, metricId, value }) => {
+    await requireEmployee(ctx);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Evaluation not found");
     const operationalMetrics = { ...doc.operationalMetrics, [metricId]: value };
@@ -97,6 +103,7 @@ export const updateAuthorityLevel = mutation({
     level: v.string(),
   },
   handler: async (ctx, { id, level }) => {
+    await requireEmployee(ctx);
     await ctx.db.patch(id, { authorityLevel: level, updatedAt: Date.now() });
   },
 });
@@ -114,6 +121,7 @@ export const updateDeficiencyPlan = mutation({
     ),
   },
   handler: async (ctx, { id, rows }) => {
+    await requireEmployee(ctx);
     await ctx.db.patch(id, { deficiencyPlan: rows, updatedAt: Date.now() });
   },
 });
@@ -129,6 +137,12 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, { id, status }) => {
+    const employee = await requireEmployee(ctx);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error("Evaluation not found");
+    const isAdmin = ["super_admin", "hr_admin"].includes(employee.adminRole);
+    const isReviewer = doc.reviewerId && doc.reviewerId === employee._id;
+    if (!isAdmin && !isReviewer) throw new Error("Insufficient permissions");
     await ctx.db.patch(id, { status, updatedAt: Date.now() });
   },
 });
@@ -136,6 +150,7 @@ export const updateStatus = mutation({
 export const deleteEvaluation = mutation({
   args: { id: v.id("evaluations") },
   handler: async (ctx, { id }) => {
+    await requireRole(ctx, ["super_admin", "hr_admin"]);
     await ctx.db.delete(id);
   },
 });
@@ -152,11 +167,12 @@ export const getEvaluation = query({
 export const createEvaluationForEmployee = mutation({
   args: {
     employeeId: v.id("employees"),
-    reviewerId: v.id("employees"),
     roleType: v.string(),
     cycleId: v.optional(v.id("reviewCycles")),
   },
-  handler: async (ctx, { employeeId, reviewerId, roleType, cycleId }) => {
+  handler: async (ctx, { employeeId, roleType, cycleId }) => {
+    const currentEmployee = await requireEmployee(ctx);
+    const reviewerId = currentEmployee._id;
     const emp = await ctx.db.get(employeeId);
     if (!emp) throw new Error("Employee not found");
     const reviewer = await ctx.db.get(reviewerId);

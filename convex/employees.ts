@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireRole } from "./auth";
 
 export const createEmployee = mutation({
   args: {
@@ -14,6 +15,7 @@ export const createEmployee = mutation({
     tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ["super_admin", "hr_admin"]);
     const normalizedEmail = args.email.trim().toLowerCase();
     const existing = await ctx.db
       .query("employees")
@@ -48,8 +50,10 @@ export const updateEmployee = mutation({
     hireDate: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     isActive: v.optional(v.boolean()),
+    inviteStatus: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...fields }) => {
+    await requireRole(ctx, ["super_admin", "hr_admin"]);
     if (fields.email !== undefined) {
       fields.email = fields.email.trim().toLowerCase();
       const existing = await ctx.db
@@ -73,6 +77,7 @@ export const updateEmployee = mutation({
 export const deactivateEmployee = mutation({
   args: { id: v.id("employees") },
   handler: async (ctx, { id }) => {
+    await requireRole(ctx, ["super_admin", "hr_admin"]);
     const emp = await ctx.db.get(id);
     if (!emp) throw new Error("Employee not found");
     const reports = await ctx.db
@@ -147,5 +152,15 @@ export const listEmployees = query({
       results = results.filter((e) => e.isActive === isActive);
     }
     return results;
+  },
+});
+
+export const getEmployeeByClerkUser = query({
+  args: { clerkUserId: v.string() },
+  handler: async (ctx, { clerkUserId }) => {
+    return await ctx.db
+      .query("employees")
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
+      .first();
   },
 });

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireRole } from "./auth";
 
 export const createReviewCycle = mutation({
   args: {
@@ -8,12 +9,13 @@ export const createReviewCycle = mutation({
     startDate: v.string(),
     dueDate: v.string(),
     selectedEmployeeIds: v.array(v.id("employees")),
-    createdBy: v.id("employees"),
   },
   handler: async (ctx, args) => {
+    const employee = await requireRole(ctx, ["super_admin", "hr_admin"]);
     const now = Date.now();
     return await ctx.db.insert("reviewCycles", {
       ...args,
+      createdBy: employee._id,
       status: "draft",
       createdAt: now,
       updatedAt: now,
@@ -31,6 +33,7 @@ export const updateReviewCycle = mutation({
     selectedEmployeeIds: v.optional(v.array(v.id("employees"))),
   },
   handler: async (ctx, { id, ...fields }) => {
+    await requireRole(ctx, ["super_admin", "hr_admin"]);
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) patch[key] = value;
@@ -42,6 +45,7 @@ export const updateReviewCycle = mutation({
 export const closeReviewCycle = mutation({
   args: { id: v.id("reviewCycles") },
   handler: async (ctx, { id }) => {
+    await requireRole(ctx, ["super_admin", "hr_admin"]);
     await ctx.db.patch(id, { status: "closed", updatedAt: Date.now() });
   },
 });
@@ -49,6 +53,7 @@ export const closeReviewCycle = mutation({
 export const activateReviewCycle = mutation({
   args: { id: v.id("reviewCycles") },
   handler: async (ctx, { id }) => {
+    await requireRole(ctx, ["super_admin", "hr_admin"]);
     const cycle = await ctx.db.get(id);
     if (!cycle) throw new Error("Review cycle not found");
     if (cycle.status !== "draft") throw new Error("Only draft cycles can be activated");
