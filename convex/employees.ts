@@ -14,18 +14,20 @@ export const createEmployee = mutation({
     tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    // Enforce email uniqueness
+    const normalizedEmail = args.email.trim().toLowerCase();
     const existing = await ctx.db
       .query("employees")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
       .first();
     if (existing) {
-      throw new Error(`An employee with email "${args.email}" already exists.`);
+      throw new Error(`An employee with email "${normalizedEmail}" already exists.`);
     }
     const now = Date.now();
     return await ctx.db.insert("employees", {
       ...args,
+      email: normalizedEmail,
       adminRole: args.adminRole ?? "employee",
+      inviteStatus: "none",
       isActive: true,
       createdAt: now,
       updatedAt: now,
@@ -49,6 +51,7 @@ export const updateEmployee = mutation({
   },
   handler: async (ctx, { id, ...fields }) => {
     if (fields.email !== undefined) {
+      fields.email = fields.email.trim().toLowerCase();
       const existing = await ctx.db
         .query("employees")
         .withIndex("by_email", (q) => q.eq("email", fields.email!))
