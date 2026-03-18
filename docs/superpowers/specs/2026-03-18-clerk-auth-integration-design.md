@@ -23,9 +23,13 @@ Add Clerk authentication to SCOPOS performance system. Clerk handles identity an
 
 ### Employee Linking
 - New field on `employees` table: `clerkUserId?: string` (indexed)
-- On first login, Convex function matches Clerk user email → employee email, writes `clerkUserId`
+- **First-login linking is a two-step process** (queries cannot write in Convex):
+  1. `getAuthenticatedEmployee(ctx)` looks up by `clerkUserId` first, then falls back to email (case-insensitive, `.toLowerCase()` both sides). If found by email but `clerkUserId` is not set, returns `{ status: "needs_linking", employee }` to the client
+  2. Client calls a dedicated `linkClerkUser` mutation that writes `clerkUserId` and sets `inviteStatus: "accepted"`
+  3. `linkClerkUser` verifies no other employee already has the same `clerkUserId` (uniqueness enforcement)
 - Subsequent logins use `clerkUserId` for fast lookup
-- If no matching employee exists, user sees "account not activated" screen
+- If no matching employee exists, user sees "account not activated" screen with a sign-out button (`<SignOutButton>`) so they can switch accounts
+- All email comparisons are case-insensitive; emails normalized to lowercase on employee creation/update
 
 ## Authorization & Route Protection
 
@@ -36,9 +40,11 @@ Add Clerk authentication to SCOPOS performance system. Clerk handles identity an
 ### Convex-Level Authorization
 - Helper function `getAuthenticatedEmployee(ctx)`:
   1. Calls `ctx.auth.getUserIdentity()`
-  2. Looks up employee by `clerkUserId`
-  3. Throws if no linked employee (not activated)
-  4. Returns the employee record (including `adminRole`)
+  2. Looks up employee by `clerkUserId`, falls back to email (case-insensitive)
+  3. Checks `isActive` — rejects inactive employees with authorization error
+  4. Throws if no linked employee (not activated)
+  5. Returns the employee record (including `adminRole`)
+- `createdBy` and `reviewedBy` fields on evaluations/cycles are populated server-side from the authenticated employee — removed from client-facing mutation arguments
 
 ### Role-Based Access Rules
 
@@ -58,7 +64,13 @@ Add Clerk authentication to SCOPOS performance system. Clerk handles identity an
 
 ### Downward Tree Query
 - `getDownwardTree(employeeId)` recursively collects all reports beneath a manager
+- Max recursion depth of 20 levels with visited-set cycle protection
 - Manager evaluation queries filter to employees in their downward tree
+
+### Write Permissions
+- Evaluation status transitions are role-gated: only the assigned reviewer or admin can advance status
+- Employees cannot finalize their own evaluations
+- Managers can only write evaluations for employees in their downward tree
 
 ## Invite Flow & Employee Lifecycle
 
@@ -84,13 +96,31 @@ Add Clerk authentication to SCOPOS performance system. Clerk handles identity an
 - `CLERK_SECRET_KEY` stored as Convex environment variable
 - Invite creation happens in a Convex action (HTTP call to Clerk API)
 
+### Deactivation
+- On employee deactivation, Clerk account banned via API
+- `getAuthenticatedEmployee` checks `isActive` — rejects deactivated users even if JWT is still valid (covers the session window before Clerk JWT expires)
+
+## Environment Variables
+
+### Next.js (`.env.local`)
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — from Clerk dashboard
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`
+- `NEXT_PUBLIC_CONVEX_URL` — already exists
+
+### Convex (dashboard environment variables)
+- `CLERK_SECRET_KEY` — for server-side invite creation and user management
+
 ## Data Model Changes
 
 ### `employees` table additions
 ```
-clerkUserId?: string        // Set on first login, indexed
-inviteStatus: string        // "none" | "pending" | "accepted"
+clerkUserId?: string        // Set on first login, indexed, uniqueness enforced in linking mutation
+inviteStatus?: string       // "none" | "pending" | "accepted" — optional for backward compat
 ```
+
+- `inviteStatus` is `v.optional(v.string())` in schema so existing records don't break
+- `createEmployee` defaults `inviteStatus` to `"none"`
+- All employee email fields normalized to lowercase on create/update
 
 ### New index
 ```
