@@ -75,6 +75,7 @@ export type AdminRole = "super_admin" | "hr_admin" | "manager" | "employee";
 
 export interface Employee {
   _id: string;
+  orgId: string;
   name: string;
   email: string;
   title: string;
@@ -94,6 +95,7 @@ export interface Employee {
 
 export interface ReviewCycle {
   _id: string;
+  orgId: string;
   name: string;
   period: string;
   startDate: string;

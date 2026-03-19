@@ -86,6 +86,17 @@ export async function requireRole(
 }
 
 /**
+ * Gets the orgId from the authenticated employee.
+ * Convenience helper for mutations/queries that need orgId.
+ */
+export async function getOrgId(
+  ctx: QueryCtx | MutationCtx
+): Promise<string> {
+  const employee = await requireEmployee(ctx);
+  return employee.orgId;
+}
+
+/**
  * Links a Clerk user ID to an employee record. Called once on first login.
  */
 export const linkClerkUser = mutation({

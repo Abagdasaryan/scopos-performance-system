@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 export default defineSchema({
   evaluations: defineTable({
+    orgId: v.string(),
     roleType: v.string(),
     empName: v.string(),
     empPosition: v.string(),
@@ -51,9 +52,11 @@ export default defineSchema({
     .index("by_created", ["createdAt"])
     .index("by_employee_id", ["employeeId"])
     .index("by_reviewer_id", ["reviewerId"])
+    .index("by_org", ["orgId"])
     .index("by_cycle", ["cycleId"]),
 
   employees: defineTable({
+    orgId: v.string(),
     name: v.string(),
     email: v.string(),
     title: v.string(),
@@ -70,6 +73,9 @@ export default defineSchema({
     createdAt: v.float64(),
     updatedAt: v.float64(),
   })
+    .index("by_org", ["orgId"])
+    .index("by_org_active", ["orgId", "isActive"])
+    .index("by_org_email", ["orgId", "email"])
     .index("by_email", ["email"])
     .index("by_manager", ["managerId"])
     .index("by_department", ["department"])
@@ -78,6 +84,7 @@ export default defineSchema({
     .index("by_clerk_user", ["clerkUserId"]),
 
   reviewCycles: defineTable({
+    orgId: v.string(),
     name: v.string(),
     period: v.string(),
     startDate: v.string(),
@@ -89,6 +96,8 @@ export default defineSchema({
     createdAt: v.float64(),
     updatedAt: v.float64(),
   })
+    .index("by_org", ["orgId"])
+    .index("by_org_status", ["orgId", "status"])
     .index("by_status", ["status"])
     .index("by_created", ["createdAt"]),
 });
