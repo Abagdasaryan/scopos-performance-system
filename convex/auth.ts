@@ -130,6 +130,10 @@ export const linkClerkUser = mutation({
     if (!employee.isActive) {
       throw new Error("Employee account is deactivated");
     }
+    // Only allow linking for invited employees
+    if (employee.inviteStatus !== "pending" && employee.inviteStatus !== "none") {
+      throw new Error("Employee account cannot be linked");
+    }
 
     // Link
     await ctx.db.patch(employee._id, {

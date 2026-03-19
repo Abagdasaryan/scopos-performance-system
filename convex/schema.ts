@@ -63,13 +63,24 @@ export default defineSchema({
     department: v.optional(v.string()),
     roleType: v.optional(v.string()),
     managerId: v.optional(v.id("employees")),
-    adminRole: v.string(),
+    adminRole: v.union(
+      v.literal("super_admin"),
+      v.literal("hr_admin"),
+      v.literal("manager"),
+      v.literal("employee")
+    ),
     isActive: v.boolean(),
     hireDate: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     metadata: v.optional(v.any()),
     clerkUserId: v.optional(v.string()),
-    inviteStatus: v.optional(v.string()),
+    inviteStatus: v.optional(
+      v.union(
+        v.literal("none"),
+        v.literal("pending"),
+        v.literal("accepted")
+      )
+    ),
     createdAt: v.float64(),
     updatedAt: v.float64(),
   })
@@ -89,7 +100,11 @@ export default defineSchema({
     period: v.string(),
     startDate: v.string(),
     dueDate: v.string(),
-    status: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("active"),
+      v.literal("closed")
+    ),
     selectedEmployeeIds: v.array(v.id("employees")),
     createdBy: v.id("employees"),
     metadata: v.optional(v.any()),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
@@ -10,6 +10,13 @@ import { api } from "../../../convex/_generated/api";
 export default function Navigation() {
   const [adminOpen, setAdminOpen] = useState(false);
   const authStatus = useQuery(api.auth.getAuthStatus);
+
+  useEffect(() => {
+    if (!adminOpen) return;
+    const handleClick = () => setAdminOpen(false);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [adminOpen]);
 
   const role = authStatus?.status === "authenticated"
     ? authStatus.employee.adminRole
@@ -35,7 +42,7 @@ export default function Navigation() {
       <div className="nav-spacer" />
       {isAdmin && (
         <div className="nav-dropdown">
-          <button onClick={() => setAdminOpen(!adminOpen)}>
+          <button onClick={(e) => { e.stopPropagation(); setAdminOpen(!adminOpen); }}>
             Admin ▾
           </button>
           {adminOpen && (
