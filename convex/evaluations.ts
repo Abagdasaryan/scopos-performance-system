@@ -7,10 +7,11 @@ import { requireEmployee, requireRole } from "./auth";
 export const createEvaluation = mutation({
   args: { roleType: v.string() },
   handler: async (ctx, { roleType }) => {
-    await requireEmployee(ctx);
+    const employee = await requireEmployee(ctx);
     const now = Date.now();
     return await ctx.db.insert("evaluations", {
       roleType,
+      orgId: employee.orgId,
       empName: "",
       empPosition: "",
       reviewer: "",
@@ -181,6 +182,7 @@ export const createEvaluationForEmployee = mutation({
     const now = Date.now();
     return await ctx.db.insert("evaluations", {
       roleType,
+      orgId: currentEmployee.orgId,
       empName: emp.name,
       empPosition: emp.title,
       reviewer: reviewer.name,
@@ -215,6 +217,7 @@ export const listEvaluations = query({
     reviewer: v.optional(v.string()),
   },
   handler: async (ctx, { roleType, status, empName, reviewer }) => {
+    const employee = await requireEmployee(ctx);
     let q;
 
     if (roleType && status) {
@@ -254,6 +257,9 @@ export const listEvaluations = query({
       filtered = filtered.filter((e) => e.reviewer === reviewer);
     }
 
+    // Scope to current org
+    filtered = filtered.filter((e) => e.orgId === employee.orgId);
+
     // Sort by createdAt descending
     filtered.sort((a, b) => b.createdAt - a.createdAt);
 
@@ -264,29 +270,35 @@ export const listEvaluations = query({
 export const getEvaluationsForEmployee = query({
   args: { employeeId: v.id("employees") },
   handler: async (ctx, { employeeId }) => {
-    return await ctx.db
+    const employee = await requireEmployee(ctx);
+    const results = await ctx.db
       .query("evaluations")
       .withIndex("by_employee_id", (q) => q.eq("employeeId", employeeId))
       .collect();
+    return results.filter((e) => e.orgId === employee.orgId);
   },
 });
 
 export const getEvaluationsForReviewer = query({
   args: { reviewerId: v.id("employees") },
   handler: async (ctx, { reviewerId }) => {
-    return await ctx.db
+    const employee = await requireEmployee(ctx);
+    const results = await ctx.db
       .query("evaluations")
       .withIndex("by_reviewer_id", (q) => q.eq("reviewerId", reviewerId))
       .collect();
+    return results.filter((e) => e.orgId === employee.orgId);
   },
 });
 
 export const getEvaluationsForCycle = query({
   args: { cycleId: v.id("reviewCycles") },
   handler: async (ctx, { cycleId }) => {
-    return await ctx.db
+    const employee = await requireEmployee(ctx);
+    const results = await ctx.db
       .query("evaluations")
       .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
       .collect();
+    return results.filter((e) => e.orgId === employee.orgId);
   },
 });
