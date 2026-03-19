@@ -42,7 +42,11 @@ export const updateEmployeeInfo = mutation({
     reviewedBy: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...fields }) => {
-    await requireEmployee(ctx);
+    const employee = await requireEmployee(ctx);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== employee.orgId) throw new Error("Evaluation not found");
+    if (doc.status === "finalized") throw new Error("Cannot edit a finalized evaluation");
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) {
@@ -60,9 +64,11 @@ export const updateSkillRating = mutation({
     rating: v.union(v.float64(), v.null()),
   },
   handler: async (ctx, { id, skillId, rating }) => {
-    await requireEmployee(ctx);
+    const employee = await requireEmployee(ctx);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== employee.orgId) throw new Error("Evaluation not found");
+    if (doc.status === "finalized") throw new Error("Cannot edit a finalized evaluation");
     const skillRatings = { ...doc.skillRatings, [skillId]: rating };
     await ctx.db.patch(id, { skillRatings, updatedAt: Date.now() });
   },
@@ -75,9 +81,11 @@ export const updateValueRating = mutation({
     rating: v.union(v.float64(), v.null()),
   },
   handler: async (ctx, { id, valueId, rating }) => {
-    await requireEmployee(ctx);
+    const employee = await requireEmployee(ctx);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== employee.orgId) throw new Error("Evaluation not found");
+    if (doc.status === "finalized") throw new Error("Cannot edit a finalized evaluation");
     const valueRatings = { ...doc.valueRatings, [valueId]: rating };
     await ctx.db.patch(id, { valueRatings, updatedAt: Date.now() });
   },
@@ -90,9 +98,11 @@ export const updateMetric = mutation({
     value: v.union(v.float64(), v.string(), v.null()),
   },
   handler: async (ctx, { id, metricId, value }) => {
-    await requireEmployee(ctx);
+    const employee = await requireEmployee(ctx);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== employee.orgId) throw new Error("Evaluation not found");
+    if (doc.status === "finalized") throw new Error("Cannot edit a finalized evaluation");
     const operationalMetrics = { ...doc.operationalMetrics, [metricId]: value };
     await ctx.db.patch(id, { operationalMetrics, updatedAt: Date.now() });
   },
@@ -104,7 +114,11 @@ export const updateAuthorityLevel = mutation({
     level: v.string(),
   },
   handler: async (ctx, { id, level }) => {
-    await requireEmployee(ctx);
+    const employee = await requireEmployee(ctx);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== employee.orgId) throw new Error("Evaluation not found");
+    if (doc.status === "finalized") throw new Error("Cannot edit a finalized evaluation");
     await ctx.db.patch(id, { authorityLevel: level, updatedAt: Date.now() });
   },
 });
@@ -122,7 +136,11 @@ export const updateDeficiencyPlan = mutation({
     ),
   },
   handler: async (ctx, { id, rows }) => {
-    await requireEmployee(ctx);
+    const employee = await requireEmployee(ctx);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== employee.orgId) throw new Error("Evaluation not found");
+    if (doc.status === "finalized") throw new Error("Cannot edit a finalized evaluation");
     await ctx.db.patch(id, { deficiencyPlan: rows, updatedAt: Date.now() });
   },
 });
@@ -141,6 +159,7 @@ export const updateStatus = mutation({
     const employee = await requireEmployee(ctx);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== employee.orgId) throw new Error("Evaluation not found");
     const isAdmin = ["super_admin", "hr_admin"].includes(employee.adminRole);
     const isReviewer = doc.reviewerId && doc.reviewerId === employee._id;
     if (!isAdmin && !isReviewer) throw new Error("Insufficient permissions");
@@ -151,7 +170,10 @@ export const updateStatus = mutation({
 export const deleteEvaluation = mutation({
   args: { id: v.id("evaluations") },
   handler: async (ctx, { id }) => {
-    await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error("Evaluation not found");
+    if (doc.orgId !== admin.orgId) throw new Error("Evaluation not found");
     await ctx.db.delete(id);
   },
 });
@@ -161,7 +183,10 @@ export const deleteEvaluation = mutation({
 export const getEvaluation = query({
   args: { id: v.id("evaluations") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const caller = await requireEmployee(ctx);
+    const doc = await ctx.db.get(id);
+    if (!doc || doc.orgId !== caller.orgId) return null;
+    return doc;
   },
 });
 
@@ -176,6 +201,7 @@ export const createEvaluationForEmployee = mutation({
     const reviewerId = currentEmployee._id;
     const emp = await ctx.db.get(employeeId);
     if (!emp) throw new Error("Employee not found");
+    if (emp.orgId !== currentEmployee.orgId) throw new Error("Employee not found");
     const reviewer = await ctx.db.get(reviewerId);
     if (!reviewer) throw new Error("Reviewer not found");
 
