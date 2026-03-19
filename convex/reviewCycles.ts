@@ -34,7 +34,10 @@ export const updateReviewCycle = mutation({
     selectedEmployeeIds: v.optional(v.array(v.id("employees"))),
   },
   handler: async (ctx, { id, ...fields }) => {
-    await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const cycle = await ctx.db.get(id);
+    if (!cycle) throw new Error("Review cycle not found");
+    if (cycle.orgId !== admin.orgId) throw new Error("Review cycle not found");
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) patch[key] = value;
@@ -46,7 +49,10 @@ export const updateReviewCycle = mutation({
 export const closeReviewCycle = mutation({
   args: { id: v.id("reviewCycles") },
   handler: async (ctx, { id }) => {
-    await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const cycle = await ctx.db.get(id);
+    if (!cycle) throw new Error("Review cycle not found");
+    if (cycle.orgId !== admin.orgId) throw new Error("Review cycle not found");
     await ctx.db.patch(id, { status: "closed", updatedAt: Date.now() });
   },
 });
@@ -57,6 +63,7 @@ export const activateReviewCycle = mutation({
     const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
     const cycle = await ctx.db.get(id);
     if (!cycle) throw new Error("Review cycle not found");
+    if (cycle.orgId !== admin.orgId) throw new Error("Review cycle not found");
     if (cycle.status !== "draft") throw new Error("Only draft cycles can be activated");
 
     const noManager: string[] = [];
@@ -108,7 +115,10 @@ export const activateReviewCycle = mutation({
 export const getReviewCycle = query({
   args: { id: v.id("reviewCycles") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const caller = await requireEmployee(ctx);
+    const cycle = await ctx.db.get(id);
+    if (!cycle || cycle.orgId !== caller.orgId) return null;
+    return cycle;
   },
 });
 
@@ -133,6 +143,9 @@ export const listReviewCycles = query({
 export const getCycleProgress = query({
   args: { cycleId: v.id("reviewCycles") },
   handler: async (ctx, { cycleId }) => {
+    const caller = await requireEmployee(ctx);
+    const cycle = await ctx.db.get(cycleId);
+    if (!cycle || cycle.orgId !== caller.orgId) return null;
     const evals = await ctx.db
       .query("evaluations")
       .withIndex("by_cycle", (q) => q.eq("cycleId", cycleId))
