@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -6,7 +6,7 @@ import { v } from "convex/values";
  * Run via: npx convex run migrations:backfillOrgId '{"orgId": "scopos"}'
  * Safe to run multiple times (idempotent).
  */
-export const backfillOrgId = mutation({
+export const backfillOrgId = internalMutation({
   args: { orgId: v.string() },
   handler: async (ctx, { orgId }) => {
     let updated = 0;
@@ -43,7 +43,7 @@ export const backfillOrgId = mutation({
  * Seed the initial super_admin employee (no auth required).
  * Run via: npx convex run migrations:seedAdmin '{"name":"...","email":"...","orgId":"scopos"}'
  */
-export const seedAdmin = mutation({
+export const seedAdmin = internalMutation({
   args: {
     name: v.string(),
     email: v.string(),
@@ -78,7 +78,7 @@ export const seedAdmin = mutation({
 /**
  * Debug: check what auth sees for the current Clerk user.
  */
-export const debugAuth = query({
+export const debugAuth = internalQuery({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
