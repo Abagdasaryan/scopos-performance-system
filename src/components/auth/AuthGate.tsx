@@ -2,10 +2,17 @@
 
 import { useCurrentEmployee } from "@/hooks/useCurrentEmployee";
 import { SignOutButton } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
 export function AuthGate({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const authStatus = useCurrentEmployee();
+
+  // Don't gate the sign-in page
+  if (pathname?.startsWith("/sign-in")) {
+    return <>{children}</>;
+  }
 
   if (!authStatus || authStatus.status === "needs_linking") {
     return (
@@ -30,7 +37,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   if (authStatus.status === "unauthenticated") {
-    return null;
+    return <>{children}</>;
   }
 
   return <>{children}</>;

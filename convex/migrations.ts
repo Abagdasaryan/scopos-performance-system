@@ -38,3 +38,39 @@ export const backfillOrgId = mutation({
     return { updated };
   },
 });
+
+/**
+ * Seed the initial super_admin employee (no auth required).
+ * Run via: npx convex run migrations:seedAdmin '{"name":"...","email":"...","orgId":"scopos"}'
+ */
+export const seedAdmin = mutation({
+  args: {
+    name: v.string(),
+    email: v.string(),
+    title: v.optional(v.string()),
+    orgId: v.string(),
+  },
+  handler: async (ctx, { name, email, title, orgId }) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await ctx.db
+      .query("employees")
+      .withIndex("by_org_email", (q) => q.eq("orgId", orgId).eq("email", normalizedEmail))
+      .first();
+    if (existing) {
+      return { id: existing._id, status: "already_exists" };
+    }
+    const now = Date.now();
+    const id = await ctx.db.insert("employees", {
+      orgId,
+      name,
+      email: normalizedEmail,
+      title: title ?? "",
+      adminRole: "super_admin",
+      isActive: true,
+      inviteStatus: "none",
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { id, status: "created" };
+  },
+});
