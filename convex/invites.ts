@@ -8,6 +8,12 @@ export const sendInvite = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    // Verify caller is admin
+    const callerRecord = await ctx.runQuery(api.employees.getEmployeeByClerkUser, { clerkUserId: identity.subject });
+    if (!callerRecord || !["super_admin", "hr_admin"].includes(callerRecord.adminRole)) {
+      throw new Error("Insufficient permissions — admin role required");
+    }
+
     const employee = await ctx.runQuery(api.employees.getEmployee, { id: employeeId });
     if (!employee) throw new Error("Employee not found");
     if (!employee.email) throw new Error("Employee has no email");
@@ -49,6 +55,12 @@ export const deactivateWithClerk = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    // Verify caller is admin
+    const callerRecord = await ctx.runQuery(api.employees.getEmployeeByClerkUser, { clerkUserId: identity.subject });
+    if (!callerRecord || !["super_admin", "hr_admin"].includes(callerRecord.adminRole)) {
+      throw new Error("Insufficient permissions — admin role required");
+    }
+
     const employee = await ctx.runQuery(api.employees.getEmployee, { id: employeeId });
     if (!employee) throw new Error("Employee not found");
 
@@ -57,12 +69,15 @@ export const deactivateWithClerk = action({
     if (employee.clerkUserId) {
       const clerkSecretKey = process.env.CLERK_SECRET_KEY;
       if (clerkSecretKey) {
-        await fetch(`https://api.clerk.com/v1/users/${employee.clerkUserId}/ban`, {
+        const banResponse = await fetch(`https://api.clerk.com/v1/users/${employee.clerkUserId}/ban`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${clerkSecretKey}`,
           },
         });
+        if (!banResponse.ok) {
+          console.error(`Failed to ban Clerk user ${employee.clerkUserId}: ${banResponse.statusText}`);
+        }
       }
     }
 
