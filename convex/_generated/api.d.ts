@@ -8,9 +8,12 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as calculations from "../calculations.js";
 import type * as employees from "../employees.js";
 import type * as evaluations from "../evaluations.js";
+import type * as invites from "../invites.js";
+import type * as migrations from "../migrations.js";
 import type * as reviewCycles from "../reviewCycles.js";
 
 import type {
@@ -20,9 +23,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   calculations: typeof calculations;
   employees: typeof employees;
   evaluations: typeof evaluations;
+  invites: typeof invites;
+  migrations: typeof migrations;
   reviewCycles: typeof reviewCycles;
 }>;
 
