@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireRole } from "./auth";
+import { requireRole, requireEmployee } from "./auth";
 
 export const createEmployee = mutation({
   args: {
@@ -15,11 +15,11 @@ export const createEmployee = mutation({
     tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
     const normalizedEmail = args.email.trim().toLowerCase();
     const existing = await ctx.db
       .query("employees")
-      .withIndex("by_email", (q) => q.eq("email", normalizedEmail))
+      .withIndex("by_org_email", (q) => q.eq("orgId", admin.orgId).eq("email", normalizedEmail))
       .first();
     if (existing) {
       throw new Error(`An employee with email "${normalizedEmail}" already exists.`);
@@ -27,6 +27,7 @@ export const createEmployee = mutation({
     const now = Date.now();
     return await ctx.db.insert("employees", {
       ...args,
+      orgId: admin.orgId,
       email: normalizedEmail,
       adminRole: args.adminRole ?? "employee",
       inviteStatus: "none",
@@ -53,12 +54,12 @@ export const updateEmployee = mutation({
     inviteStatus: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...fields }) => {
-    await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
     if (fields.email !== undefined) {
       fields.email = fields.email.trim().toLowerCase();
       const existing = await ctx.db
         .query("employees")
-        .withIndex("by_email", (q) => q.eq("email", fields.email!))
+        .withIndex("by_org_email", (q) => q.eq("orgId", admin.orgId).eq("email", fields.email!))
         .first();
       if (existing && existing._id !== id) {
         throw new Error(`An employee with email "${fields.email}" already exists.`);
@@ -104,12 +105,14 @@ export const getEmployee = query({
 export const getAllEmployees = query({
   args: { includeInactive: v.optional(v.boolean()) },
   handler: async (ctx, { includeInactive }) => {
+    const employee = await requireEmployee(ctx);
     if (includeInactive) {
-      return await ctx.db.query("employees").collect();
+      return await ctx.db.query("employees")
+        .withIndex("by_org", (q) => q.eq("orgId", employee.orgId))
+        .collect();
     }
-    return await ctx.db
-      .query("employees")
-      .withIndex("by_active", (q) => q.eq("isActive", true))
+    return await ctx.db.query("employees")
+      .withIndex("by_org_active", (q) => q.eq("orgId", employee.orgId).eq("isActive", true))
       .collect();
   },
 });
@@ -131,19 +134,23 @@ export const listEmployees = query({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, { department, roleType, isActive }) => {
+    const employee = await requireEmployee(ctx);
     let results;
     if (department) {
       results = await ctx.db
         .query("employees")
-        .withIndex("by_department", (q) => q.eq("department", department))
+        .withIndex("by_org", (q) => q.eq("orgId", employee.orgId))
         .collect();
+      results = results.filter((e) => e.department === department);
     } else if (isActive !== undefined) {
       results = await ctx.db
         .query("employees")
-        .withIndex("by_active", (q) => q.eq("isActive", isActive))
+        .withIndex("by_org_active", (q) => q.eq("orgId", employee.orgId).eq("isActive", isActive))
         .collect();
     } else {
-      results = await ctx.db.query("employees").collect();
+      results = await ctx.db.query("employees")
+        .withIndex("by_org", (q) => q.eq("orgId", employee.orgId))
+        .collect();
     }
     if (roleType) {
       results = results.filter((e) => e.roleType === roleType);
