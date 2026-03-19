@@ -16,6 +16,15 @@ export const createEmployee = mutation({
   },
   handler: async (ctx, args) => {
     const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
+    if (args.adminRole === "super_admin" && admin.adminRole !== "super_admin") {
+      throw new Error("Only super admins can assign the super_admin role");
+    }
+    if (args.adminRole !== undefined) {
+      const validRoles = ["super_admin", "hr_admin", "manager", "employee"];
+      if (!validRoles.includes(args.adminRole)) {
+        throw new Error(`Invalid admin role: ${args.adminRole}`);
+      }
+    }
     const normalizedEmail = args.email.trim().toLowerCase();
     const existing = await ctx.db
       .query("employees")
@@ -55,6 +64,20 @@ export const updateEmployee = mutation({
   },
   handler: async (ctx, { id, ...fields }) => {
     const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const target = await ctx.db.get(id);
+    if (!target) throw new Error("Employee not found");
+    if (target.orgId !== admin.orgId) throw new Error("Employee not found");
+    // Only super_admin can assign super_admin role
+    if (fields.adminRole === "super_admin" && admin.adminRole !== "super_admin") {
+      throw new Error("Only super admins can assign the super_admin role");
+    }
+    // Validate adminRole is a known value
+    if (fields.adminRole !== undefined) {
+      const validRoles = ["super_admin", "hr_admin", "manager", "employee"];
+      if (!validRoles.includes(fields.adminRole)) {
+        throw new Error(`Invalid admin role: ${fields.adminRole}`);
+      }
+    }
     if (fields.email !== undefined) {
       fields.email = fields.email.trim().toLowerCase();
       const existing = await ctx.db
@@ -78,9 +101,10 @@ export const updateEmployee = mutation({
 export const deactivateEmployee = mutation({
   args: { id: v.id("employees") },
   handler: async (ctx, { id }) => {
-    await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
     const emp = await ctx.db.get(id);
     if (!emp) throw new Error("Employee not found");
+    if (emp.orgId !== admin.orgId) throw new Error("Employee not found");
     const reports = await ctx.db
       .query("employees")
       .withIndex("by_manager", (q) => q.eq("managerId", id))
@@ -98,7 +122,10 @@ export const deactivateEmployee = mutation({
 export const getEmployee = query({
   args: { id: v.id("employees") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const caller = await requireEmployee(ctx);
+    const emp = await ctx.db.get(id);
+    if (!emp || emp.orgId !== caller.orgId) return null;
+    return emp;
   },
 });
 
@@ -120,10 +147,12 @@ export const getAllEmployees = query({
 export const getDirectReports = query({
   args: { managerId: v.id("employees") },
   handler: async (ctx, { managerId }) => {
-    return await ctx.db
+    const caller = await requireEmployee(ctx);
+    const results = await ctx.db
       .query("employees")
       .withIndex("by_manager", (q) => q.eq("managerId", managerId))
       .collect();
+    return results.filter((e) => e.orgId === caller.orgId);
   },
 });
 
