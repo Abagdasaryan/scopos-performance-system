@@ -38,7 +38,7 @@ export const createEmployee = mutation({
       ...args,
       orgId: admin.orgId,
       email: normalizedEmail,
-      adminRole: args.adminRole ?? "employee",
+      adminRole: (args.adminRole ?? "employee") as "super_admin" | "hr_admin" | "manager" | "employee",
       inviteStatus: "none",
       isActive: true,
       createdAt: now,

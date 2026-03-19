@@ -129,7 +129,7 @@ export const listReviewCycles = query({
     if (status) {
       return await ctx.db
         .query("reviewCycles")
-        .withIndex("by_org_status", (q) => q.eq("orgId", employee.orgId).eq("status", status))
+        .withIndex("by_org_status", (q) => q.eq("orgId", employee.orgId).eq("status", status as "draft" | "active" | "closed"))
         .collect();
     }
     const results = await ctx.db
