@@ -144,20 +144,26 @@ export const linkClerkUser = mutation({
 
 /**
  * Query to check auth status from the client.
+ * Never throws — always returns a status object.
  */
 export const getAuthStatus = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return { status: "unauthenticated" as const };
-    const result = await getAuthenticatedEmployee(ctx);
-    if (result.status === "authenticated") {
-      return { status: "authenticated" as const, employee: result.employee };
+    try {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) return { status: "unauthenticated" as const };
+      const result = await getAuthenticatedEmployee(ctx);
+      if (result.status === "authenticated") {
+        return { status: "authenticated" as const, employee: result.employee };
+      }
+      if (result.status === "needs_linking") {
+        return { status: "needs_linking" as const, employee: result.employee };
+      }
+      return { status: "not_activated" as const };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      return { status: "error" as const, error: message };
     }
-    if (result.status === "needs_linking") {
-      return { status: "needs_linking" as const, employee: result.employee };
-    }
-    return { status: "not_activated" as const };
   },
 });
 

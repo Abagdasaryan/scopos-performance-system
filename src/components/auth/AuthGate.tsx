@@ -24,6 +24,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
+  if (authStatus.status === "error") {
+    return <ErrorScreen error={authStatus.error} />;
+  }
+
   if (authStatus.status === "not_activated") {
     return <NotActivatedScreen />;
   }
@@ -50,6 +54,26 @@ function NotActivatedScreen() {
       )}
       <SignOutButton>
         <button className="btn btn-secondary">Sign Out</button>
+      </SignOutButton>
+    </div>
+  );
+}
+
+function ErrorScreen({ error }: { error: string }) {
+  const debug = useQuery(api.migrations.debugAuth);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", gap: 16 }}>
+      <h2 style={{ fontFamily: "var(--font-fraunces), 'Fraunces', serif", color: "var(--danger, #c0392b)" }}>Authentication Error</h2>
+      <p style={{ color: "var(--ink-muted)", maxWidth: 400, textAlign: "center" }}>
+        {error}
+      </p>
+      {debug && (
+        <pre style={{ background: "#f3f4f6", padding: 16, borderRadius: 8, fontSize: 12, maxWidth: 500, overflow: "auto" }}>
+          {JSON.stringify(debug, null, 2)}
+        </pre>
+      )}
+      <SignOutButton>
+        <button className="btn btn-secondary">Sign Out & Try Again</button>
       </SignOutButton>
     </div>
   );
