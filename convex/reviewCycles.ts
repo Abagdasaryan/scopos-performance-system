@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireRole } from "./auth";
+import { requireRole, requireEmployee } from "./auth";
 
 export const createReviewCycle = mutation({
   args: {
@@ -15,6 +15,7 @@ export const createReviewCycle = mutation({
     const now = Date.now();
     return await ctx.db.insert("reviewCycles", {
       ...args,
+      orgId: employee.orgId,
       createdBy: employee._id,
       status: "draft",
       createdAt: now,
@@ -53,7 +54,7 @@ export const closeReviewCycle = mutation({
 export const activateReviewCycle = mutation({
   args: { id: v.id("reviewCycles") },
   handler: async (ctx, { id }) => {
-    await requireRole(ctx, ["super_admin", "hr_admin"]);
+    const admin = await requireRole(ctx, ["super_admin", "hr_admin"]);
     const cycle = await ctx.db.get(id);
     if (!cycle) throw new Error("Review cycle not found");
     if (cycle.status !== "draft") throw new Error("Only draft cycles can be activated");
@@ -78,6 +79,7 @@ export const activateReviewCycle = mutation({
       const manager = await ctx.db.get(emp.managerId);
       const now = Date.now();
       await ctx.db.insert("evaluations", {
+        orgId: admin.orgId,
         roleType: emp.roleType,
         empName: emp.name,
         empPosition: emp.title,
@@ -113,17 +115,18 @@ export const getReviewCycle = query({
 export const listReviewCycles = query({
   args: { status: v.optional(v.string()) },
   handler: async (ctx, { status }) => {
+    const employee = await requireEmployee(ctx);
     if (status) {
       return await ctx.db
         .query("reviewCycles")
-        .withIndex("by_status", (q) => q.eq("status", status))
+        .withIndex("by_org_status", (q) => q.eq("orgId", employee.orgId).eq("status", status))
         .collect();
     }
-    return await ctx.db
+    const results = await ctx.db
       .query("reviewCycles")
-      .withIndex("by_created")
-      .order("desc")
+      .withIndex("by_org", (q) => q.eq("orgId", employee.orgId))
       .collect();
+    return results.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
