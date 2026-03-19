@@ -93,6 +93,7 @@ export async function getOrgId(
   ctx: QueryCtx | MutationCtx
 ): Promise<string> {
   const employee = await requireEmployee(ctx);
+  if (!employee.orgId) throw new Error("Employee has no orgId");
   return employee.orgId;
 }
 
