@@ -1,0 +1,31 @@
+<h2>Deployment Status</h2>
+<p class="subtitle">SCOPOS Performance System — Clerk Auth Integration</p>
+
+<div class="section">
+  <h3>Live Site</h3>
+  <p><a href="https://scopos-performance-system.vercel.app/sign-in" target="_blank" style="color: #2563eb; text-decoration: underline; font-size: 18px;">Open Sign-In Page →</a></p>
+  <p style="color: #6b7280; margin-top: 8px;">Click the link above to see the Clerk sign-in form in your browser.</p>
+</div>
+
+<div class="section">
+  <h3>Verification Checklist</h3>
+  <div style="text-align: left; max-width: 500px; margin: 0 auto;">
+    <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">✅ Vercel deployment — Ready</div>
+    <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">✅ Convex prod deployed — curious-newt-660</div>
+    <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">✅ Clerk proxy — active (x-clerk-auth-status header present)</div>
+    <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">✅ Route protection — unauthenticated users redirected</div>
+    <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">✅ /sign-in — Clerk SignIn component loading</div>
+    <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">✅ orgId migration — all records tagged "scopos"</div>
+    <div style="padding: 8px 0;">⏳ End-to-end login — needs an invited user to test</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Next Steps</h3>
+  <div style="text-align: left; max-width: 500px; margin: 0 auto; color: #374151;">
+    <p>1. Create an employee in the Convex dashboard with your email</p>
+    <p>2. Set their <code>orgId: "scopos"</code> and <code>adminRole: "super_admin"</code></p>
+    <p>3. Sign in at the link above</p>
+    <p>4. The system will auto-link your Clerk account to the employee</p>
+  </div>
+</div>

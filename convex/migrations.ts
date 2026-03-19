@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -72,5 +72,41 @@ export const seedAdmin = mutation({
       updatedAt: now,
     });
     return { id, status: "created" };
+  },
+});
+
+/**
+ * Debug: check what auth sees for the current Clerk user.
+ */
+export const debugAuth = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return { error: "no identity" };
+
+    const email = identity.email?.toLowerCase();
+    const clerkUserId = identity.subject;
+
+    const byClerk = await ctx.db
+      .query("employees")
+      .withIndex("by_clerk_user", (q) => q.eq("clerkUserId", clerkUserId))
+      .first();
+
+    const byEmail = email
+      ? await ctx.db
+          .query("employees")
+          .withIndex("by_email", (q) => q.eq("email", email))
+          .first()
+      : null;
+
+    return {
+      clerkIdentity: {
+        subject: clerkUserId,
+        email: identity.email,
+        emailLower: email,
+      },
+      foundByClerkId: byClerk ? { id: byClerk._id, email: byClerk.email, orgId: byClerk.orgId } : null,
+      foundByEmail: byEmail ? { id: byEmail._id, email: byEmail.email, orgId: byEmail.orgId } : null,
+    };
   },
 });
