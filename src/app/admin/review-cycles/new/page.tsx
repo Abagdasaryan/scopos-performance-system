@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { ROLE_CONFIGS } from "@/lib/roleConfig";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 export default function NewReviewCyclePage() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function NewReviewCyclePage() {
         period: period.trim() || "",
         startDate: startDate || "",
         dueDate: dueDate || "",
-        selectedEmployeeIds: Array.from(selectedIds) as any,
+        selectedEmployeeIds: Array.from(selectedIds) as Id<"employees">[],
       });
       router.push(`/admin/review-cycles/${newId}`);
     } catch (err: unknown) {

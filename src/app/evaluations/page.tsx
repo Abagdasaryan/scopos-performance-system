@@ -226,7 +226,7 @@ export default function EvaluationsPage() {
       {/* Table */}
       <div className="card">
         <div className="card-body" style={{ padding: 0 }}>
-          {evaluations === undefined ? (
+          {evaluations === undefined && employees === undefined ? (
             <div style={{ padding: 24, textAlign: "center", color: "var(--ink-soft)" }}>Loading...</div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 24, textAlign: "center", color: "var(--ink-soft)" }}>

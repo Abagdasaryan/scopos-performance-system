@@ -21,15 +21,20 @@ export default function NewEvaluationPage() {
     : null;
 
   const handleCreate = async (roleType: string) => {
-    if (selectedEmployee) {
-      const id = await createEvalForEmployee({
-        employeeId: selectedEmployee as Id<"employees">,
-        roleType,
-      });
-      router.push(`/evaluations/${id}`);
-    } else {
-      const id = await createEvaluation({ roleType });
-      router.push(`/evaluations/${id}`);
+    try {
+      if (selectedEmployee) {
+        const id = await createEvalForEmployee({
+          employeeId: selectedEmployee as Id<"employees">,
+          roleType,
+        });
+        router.push(`/evaluations/${id}`);
+      } else {
+        const id = await createEvaluation({ roleType });
+        router.push(`/evaluations/${id}`);
+      }
+    } catch (err) {
+      console.error("Failed to create evaluation:", err);
+      alert(err instanceof Error ? err.message : "Failed to create evaluation");
     }
   };
 
@@ -68,7 +73,6 @@ export default function NewEvaluationPage() {
           )}
         </div>
       </div>
-
 
       <p style={{ color: "var(--ink-soft)", marginBottom: 24 }}>Select the role type for this evaluation:</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>

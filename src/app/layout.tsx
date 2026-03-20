@@ -3,7 +3,7 @@ import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/providers/ConvexProvider";
 import Navigation from "@/components/layout/Navigation";
-import { AuthGate } from "@/components/auth/AuthGate";
+import { ConvexErrorBoundary } from "@/components/ui/ConvexErrorBoundary";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -31,10 +31,10 @@ export default function RootLayout({
     <html lang="en" className={`${dmSans.variable} ${fraunces.variable}`}>
       <body>
         <ConvexClientProvider>
-          <AuthGate>
-            <Navigation />
+          <Navigation />
+          <ConvexErrorBoundary>
             {children}
-          </AuthGate>
+          </ConvexErrorBoundary>
         </ConvexClientProvider>
       </body>
     </html>
