@@ -18,9 +18,12 @@ export default function Navigation() {
     return () => document.removeEventListener("click", handleClick);
   }, [adminOpen]);
 
-  const role = authStatus?.status === "authenticated"
-    ? authStatus.employee.adminRole
-    : null;
+  const employee = authStatus?.status === "authenticated"
+    ? authStatus.employee
+    : authStatus?.status === "needs_linking"
+      ? authStatus.employee
+      : null;
+  const role = employee?.adminRole ?? null;
 
   const isAdmin = role === "super_admin" || role === "hr_admin";
   const isManagerOrAbove = isAdmin || role === "manager";

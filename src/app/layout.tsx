@@ -4,6 +4,7 @@ import "./globals.css";
 import { ConvexClientProvider } from "@/components/providers/ConvexProvider";
 import Navigation from "@/components/layout/Navigation";
 import { ConvexErrorBoundary } from "@/components/ui/ConvexErrorBoundary";
+import { AutoLinker } from "@/components/auth/AutoLinker";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en" className={`${dmSans.variable} ${fraunces.variable}`}>
       <body>
         <ConvexClientProvider>
+          <AutoLinker />
           <Navigation />
           <ConvexErrorBoundary>
             {children}
